@@ -7,6 +7,7 @@ import {
   CardDescription 
 } from './components/ui/card';
 import { Input } from './components/ui/input';
+import { Textarea } from './components/ui/textarea';
 import { Button } from './components/ui/button';
 import { 
   Table, 
@@ -24,7 +25,7 @@ import { Separator } from './components/ui/separator';
 import { Skeleton } from './components/ui/skeleton';
 
 const WarcraftLogsReport = () => {
-  const [reportCode, setReportCode] = useState('GNyJ29dVMhBTRnY3');
+  const [reportCode, setReportCode] = useState('');
   const apiKey = '122f2d0f15365c7c36b5b04fe99800e7';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -34,6 +35,7 @@ const WarcraftLogsReport = () => {
   const [reportTitle, setReportTitle] = useState('');
   const [targetZone, setTargetZone] = useState('Liberation of Undermine');
   const [wipefestScores, setWipefestScores] = useState({});
+  const [csvText, setCsvText] = useState('');
 
   const fetchReport = async () => {
     setLoading(true);
@@ -135,11 +137,43 @@ const WarcraftLogsReport = () => {
     }
   };
 
+  // Import scores from CSV text
+  const handleCsvImport = () => {
+    if (!csvText.trim()) return;
+    
+    // Simple CSV parser
+    const newScores = { ...wipefestScores };
+    const lines = csvText.split('\n');
+    
+    // Skip header row if it exists (assumes first line is header)
+    const startIdx = lines[0].toLowerCase().includes('player') && lines[0].toLowerCase().includes('parse') ? 1 : 0;
+    
+    for (let i = startIdx; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const parts = line.split(',');
+      if (parts.length >= 2) {
+        const playerName = parts[0].trim();
+        const parseValue = parseInt(parts[1].trim(), 10);
+        
+        if (playerName && !isNaN(parseValue)) {
+          newScores[playerName] = parseValue;
+        }
+      }
+    }
+    
+    // Update the wipefest scores
+    setWipefestScores(newScores);
+  };
+
   // Get class color
   const getClassColor = (className) => {
     const classColors = {
       'DeathKnight': '#C41E3A',
       'DemonHunter': '#A330C9',
+      'Death Knight': '#C41E3A',
+      'Demon Hunter': '#A330C9',
       'Druid': '#FF7C0A',
       'Hunter': '#AAD372',
       'Mage': '#3FC7EB',
@@ -378,73 +412,99 @@ const WarcraftLogsReport = () => {
       )}
       
       {playerAverages.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Player Average Performance</CardTitle>
-            <CardDescription>Average parse percentiles across all fights</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Rank</TableHead>
-                  <TableHead>Player</TableHead>
-                  <TableHead>Class/Spec</TableHead>
-                  <TableHead>Avg. Percentile</TableHead>
-                  <TableHead>Wipefest Score</TableHead>
-                  <TableHead>Total Average</TableHead>
-                  <TableHead>Fights</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {playerAverages.map((player, index) => (
-                    <TableRow key={player.playerName}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>
-                        <span style={{ color: getClassColor(player.class) }}>
-                          {player.playerName}
-                        </span>
-                      </TableCell>
-                      <TableCell>{player.spec} {player.class}</TableCell>
-                      <TableCell>
-                        <Badge variant={getPercentileBadgeVariant(player.averagePercentile)}>
-                          {player.averagePercentile}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="number" 
-                          min="0" 
-                          max="100" 
-                          className="w-20"
-                          value={player.wipefestScore}
-                          onChange={(e) => {
-                            const newValue = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                            setWipefestScores(prev => ({
-                              ...prev,
-                              [player.playerName]: newValue
-                            }));
-                          }}
-                          onBlur={() => {
-                            // Force a re-calculation of player averages to update the sort order
-                            // We just need to trigger a state update to force a re-render
-                            setWipefestScores({...wipefestScores});
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getPercentileBadgeVariant(player.totalAverage)}>
-                          {player.totalAverage}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{player.totalParses}</TableCell>
-                    </TableRow>
-                  ))
-                }
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <>
+          {/* CSV Import Card */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Import Wipefest Scores</CardTitle>
+              <CardDescription>
+                Paste CSV data with player names and parse values.
+                Format: player,parse (one entry per line)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                placeholder="player,parse
+player1,95
+player2,87
+..."
+                className="min-h-32 mb-4 font-mono"
+                value={csvText}
+                onChange={(e) => setCsvText(e.target.value)}
+              />
+              <Button onClick={handleCsvImport}>Import Scores</Button>
+            </CardContent>
+          </Card>
+
+          {/* Player Average Performance Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Player Average Performance</CardTitle>
+              <CardDescription>Average parse percentiles across all fights</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Rank</TableHead>
+                    <TableHead>Player</TableHead>
+                    <TableHead>Class/Spec</TableHead>
+                    <TableHead>Avg. Percentile</TableHead>
+                    <TableHead>Wipefest Score</TableHead>
+                    <TableHead>Total Average</TableHead>
+                    <TableHead>Fights</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {playerAverages.map((player, index) => (
+                      <TableRow key={player.playerName}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>
+                          <span style={{ color: getClassColor(player.class) }}>
+                            {player.playerName}
+                          </span>
+                        </TableCell>
+                        <TableCell>{player.spec} {player.class}</TableCell>
+                        <TableCell>
+                          <Badge variant={getPercentileBadgeVariant(player.averagePercentile)}>
+                            {player.averagePercentile}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            className="w-20"
+                            value={player.wipefestScore}
+                            onChange={(e) => {
+                              const newValue = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                              setWipefestScores(prev => ({
+                                ...prev,
+                                [player.playerName]: newValue
+                              }));
+                            }}
+                            onBlur={() => {
+                              // Force a re-calculation of player averages to update the sort order
+                              // We just need to trigger a state update to force a re-render
+                              setWipefestScores({...wipefestScores});
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getPercentileBadgeVariant(player.totalAverage)}>
+                            {player.totalAverage}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{player.totalParses}</TableCell>
+                      </TableRow>
+                    ))
+                  }
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
