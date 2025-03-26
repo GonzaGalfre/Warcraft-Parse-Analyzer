@@ -440,7 +440,7 @@ const WarcraftLogsReport = () => {
                       <TableCell>{player.totalParses}</TableCell>
                     </TableRow>
                   ))
-                });
+                }
               </TableBody>
             </Table>
           </CardContent>
