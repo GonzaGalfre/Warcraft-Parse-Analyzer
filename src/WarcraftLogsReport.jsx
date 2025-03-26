@@ -24,7 +24,7 @@ import { Separator } from './components/ui/separator';
 import { Skeleton } from './components/ui/skeleton';
 
 const WarcraftLogsReport = () => {
-  const [reportCode, setReportCode] = useState('GNyJ29dVMhBTRnY3');
+  const [reportCode, setReportCode] = useState('');
   const apiKey = '122f2d0f15365c7c36b5b04fe99800e7';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
