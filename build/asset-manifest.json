@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/warcraft-parse-analyzer/static/css/main.45e7182b.css",
+    "main.js": "/warcraft-parse-analyzer/static/js/main.d068959b.js",
+    "static/js/453.e1ea8ea8.chunk.js": "/warcraft-parse-analyzer/static/js/453.e1ea8ea8.chunk.js",
+    "index.html": "/warcraft-parse-analyzer/index.html",
+    "main.45e7182b.css.map": "/warcraft-parse-analyzer/static/css/main.45e7182b.css.map",
+    "main.d068959b.js.map": "/warcraft-parse-analyzer/static/js/main.d068959b.js.map",
+    "453.e1ea8ea8.chunk.js.map": "/warcraft-parse-analyzer/static/js/453.e1ea8ea8.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.45e7182b.css",
+    "static/js/main.d068959b.js"
+  ]
+}
