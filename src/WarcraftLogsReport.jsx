@@ -24,7 +24,7 @@ import { Separator } from './components/ui/separator';
 import { Skeleton } from './components/ui/skeleton';
 
 const WarcraftLogsReport = () => {
-  const [reportCode, setReportCode] = useState('');
+  const [reportCode, setReportCode] = useState('GNyJ29dVMhBTRnY3');
   const apiKey = '122f2d0f15365c7c36b5b04fe99800e7';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -33,6 +33,7 @@ const WarcraftLogsReport = () => {
   const [selectedFight, setSelectedFight] = useState(null);
   const [reportTitle, setReportTitle] = useState('');
   const [targetZone, setTargetZone] = useState('Liberation of Undermine');
+  const [wipefestScores, setWipefestScores] = useState({});
 
   const fetchReport = async () => {
     setLoading(true);
@@ -201,15 +202,20 @@ const WarcraftLogsReport = () => {
     // Calculate averages for each player
     const playerAverages = Object.values(playerParses).map(player => {
       const average = player.parses.reduce((sum, val) => sum + val, 0) / player.parses.length;
+      const wipefestScore = wipefestScores[player.playerName] || 0;
+      const totalAverage = Math.round((Math.round(average) + wipefestScore) / 2);
+      
       return {
         ...player,
         averagePercentile: Math.round(average),
-        totalParses: player.parses.length
+        totalParses: player.parses.length,
+        wipefestScore,
+        totalAverage
       };
     });
     
-    // Sort by average percentile (highest first)
-    return playerAverages.sort((a, b) => b.averagePercentile - a.averagePercentile);
+    // Sort by total average if available, otherwise by parse percentile (highest first)
+    return playerAverages.sort((a, b) => b.totalAverage - a.totalAverage);
   };
 
   const playerAverages = calculatePlayerAverages();
@@ -385,27 +391,56 @@ const WarcraftLogsReport = () => {
                   <TableHead>Player</TableHead>
                   <TableHead>Class/Spec</TableHead>
                   <TableHead>Avg. Percentile</TableHead>
+                  <TableHead>Wipefest Score</TableHead>
+                  <TableHead>Total Average</TableHead>
                   <TableHead>Fights</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {playerAverages.map((player, index) => (
-                  <TableRow key={player.playerName}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>
-                      <span style={{ color: getClassColor(player.class) }}>
-                        {player.playerName}
-                      </span>
-                    </TableCell>
-                    <TableCell>{player.spec} {player.class}</TableCell>
-                    <TableCell>
-                      <Badge variant={getPercentileBadgeVariant(player.averagePercentile)}>
-                        {player.averagePercentile}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{player.totalParses}</TableCell>
-                  </TableRow>
-                ))}
+                    <TableRow key={player.playerName}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>
+                        <span style={{ color: getClassColor(player.class) }}>
+                          {player.playerName}
+                        </span>
+                      </TableCell>
+                      <TableCell>{player.spec} {player.class}</TableCell>
+                      <TableCell>
+                        <Badge variant={getPercentileBadgeVariant(player.averagePercentile)}>
+                          {player.averagePercentile}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          max="100" 
+                          className="w-20"
+                          value={player.wipefestScore}
+                          onChange={(e) => {
+                            const newValue = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                            setWipefestScores(prev => ({
+                              ...prev,
+                              [player.playerName]: newValue
+                            }));
+                          }}
+                          onBlur={() => {
+                            // Force a re-calculation of player averages to update the sort order
+                            // We just need to trigger a state update to force a re-render
+                            setWipefestScores({...wipefestScores});
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getPercentileBadgeVariant(player.totalAverage)}>
+                          {player.totalAverage}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{player.totalParses}</TableCell>
+                    </TableRow>
+                  ))
+                });
               </TableBody>
             </Table>
           </CardContent>
