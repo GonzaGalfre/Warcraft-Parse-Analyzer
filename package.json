@@ -2,7 +2,6 @@
   "name": "warcraft-logs-viewer",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://YOUR-USERNAME.github.io/warcraft-parse-analyzer",
   "dependencies": {
     "@radix-ui/react-separator": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.2",
@@ -24,9 +23,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
@@ -49,7 +46,6 @@
   "devDependencies": {
     "@shadcn/ui": "^0.0.4",
     "autoprefixer": "^10.4.21",
-    "gh-pages": "^6.1.0",
     "postcss": "^8.5.3",
     "shadcn": "^2.4.0-canary.17",
     "tailwindcss": "^3.3.0",
